@@ -8,6 +8,7 @@ import { BASE_URL } from "../utils/constants";
 const Login = () => {
   const [email, setEmail] = useState("hamza.akram@techwards.co");
   const [password, setPassword] = useState("Techwards@123");
+  const [error, setError] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const handleSumbit = async () => {
@@ -20,9 +21,11 @@ const Login = () => {
         },
         { withCredentials: true }
       );
+      console.log("res data", res.data);
       dispatch(addUser(res?.data));
       navigate("/");
     } catch (error) {
+      setError(error?.response?.data || "Something went wrong!");
       console.log("error: ", error);
     }
   };
@@ -57,6 +60,7 @@ const Login = () => {
               />
             </label>
           </div>
+          <p className="text-red-500">{error}</p>
           <div className="card-actions justify-center">
             <button className="btn btn-primary" onClick={handleSumbit}>
               Login
