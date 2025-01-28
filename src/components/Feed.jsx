@@ -26,7 +26,7 @@ const Feed = () => {
   }, []);
   return (
     <div className="flex justify-center py-4">
-      {feed && <UserCard data={feed[0]} />}
+      {feed && <UserCard data={feed[0] ? feed[0] : []} />}
     </div>
   );
 };
