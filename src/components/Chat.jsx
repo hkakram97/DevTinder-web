@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { createSocketConnection } from "../utils/socket";
 import { useSelector } from "react-redux";
+import { BASE_URL } from "../utils/constants";
+import axios from "axios";
 
 const Chat = () => {
   const { targetUserId } = useParams();
@@ -10,6 +12,23 @@ const Chat = () => {
   const user = useSelector((store) => store.user);
   const userId = user?._id;
 
+  const fetchChatMessages = async () => {
+    const chat = await axios.get(BASE_URL + "/chat/" + targetUserId, {
+      withCredentials: true,
+    });
+
+    const chatMessage = chat?.data?.messages.map((msg) => {
+      return {
+        firstName: msg?.senderId?.firstName,
+        lastName: msg?.senderId?.lastName,
+        text: msg?.text,
+      };
+    });
+    setMessages(chatMessage);
+  };
+  useEffect(() => {
+    fetchChatMessages();
+  }, []);
   useEffect(() => {
     if (!userId) {
       return;
@@ -21,9 +40,8 @@ const Chat = () => {
       targetUserId,
     });
 
-    socket.on("messageRecieved", ({ firstName, text }) => {
-      console.log("Client", firstName, " ", text);
-      setMessages((prev) => [...prev, { firstName, text }]);
+    socket.on("messageRecieved", ({ firstName, lastName, text }) => {
+      setMessages((prev) => [...prev, { firstName, lastName, text }]);
     });
     return () => {
       socket.disconnect();
@@ -34,6 +52,7 @@ const Chat = () => {
     const socket = createSocketConnection();
     socket.emit("sendMessage", {
       firstName: user.firstName,
+      lastName: user.lastName,
       userId,
       targetUserId,
       text: newMessage,
@@ -45,10 +64,12 @@ const Chat = () => {
       <h1 className="p-5 border-b border-gray-600 text-white">Chat</h1>
       <div className="flex-1 overflow-scroll p-5">
         {messages?.map((msg, index) => {
+          const classItem =
+            user.firstName === msg.firstName ? "chat-end" : "chat-start";
           return (
-            <div key={index}>
-              <div className="chat-header">{msg.firstName}</div>
-              <div className="chat chat-start">
+            <div key={index} className={classItem}>
+              <div className="chat-header">{`${msg.firstName} ${msg.lastName}`}</div>
+              <div className={"chat" + { classItem }}>
                 <div className="chat-bubble">{msg.text}</div>
               </div>
             </div>
